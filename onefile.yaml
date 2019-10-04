@@ -11,13 +11,6 @@ spec:
         description: the ibmcloud registry region
       - name: toolchainID
         description: toolchain ID you want JSON from
-    resources:
-    - name: workspace
-      type: git
-  outputs:
-    resources:
-    - name: workspace
-      type: git
   steps:
   - name: get-json
     image: ubuntu
@@ -105,13 +98,6 @@ spec:
           value: $(params.region)
         - name: toolchainID
           value: $(params.toolchainID)
-    resources:
-      inputs:
-      - name: workspace
-        resource: source-repo
-      outputs:
-      - name: workspace
-        resource: source-repo
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
