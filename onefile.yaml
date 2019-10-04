@@ -2,44 +2,47 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: get-json
+  name: create-file
 spec:
   inputs:
-    params:
-      - name: apikey
-        description: the ibmcloud api key
-      - name: api
-        description: the ibmcloud api endpoint
-        default: "https://cloud.ibm.com"
-      - name: region
-        description: the ibmcloud registry region
-      - name: toolchainID
-        description: the toolchain id
     resources:
     - name: workspace
       type: git
+      targetPath: damnworkspace
   outputs:
     resources:
     - name: workspace
       type: git
   steps:
-  - name: login-and-get
+  - name: read-docs-old
     image: ubuntu
-    env:
-      - name: IBMCLOUD_API_KEY
-        value: $(inputs.params.apikey)
-      - name: API
-        value: $(inputs.params.api)
-      - name: REGION
-        value: $(inputs.params.region)
-      - name: TOOLCHAIN_ID
-        value: $(inputs.params.toolchainID)
     command: ["/bin/bash"]
-    args:
-      - ibmcloud login --apikey $IBMCLOUD_API_KEY;
+    args: ['-c', 'ls -la /workspace/damnworkspace/docs/README.md'] # tests that targetpath works
+  - name: write-new-stuff
+    image: ubuntu
+    command: ['bash']
+    args: ['-c', 'ln -s /workspace/damnworkspace /workspace/output/workspace && echo some stuff > /workspace/output/workspace/stuff']
+---
+# Reads a file from a predefined path in the workspace git PipelineResource
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: check-stuff-file-exists
+spec:
+  inputs:
+    resources:
+    - name: workspace
+      type: git
+      targetPath: newworkspace
+  steps:
+  - name: read
+    image: ubuntu
+    command: ["/bin/bash"]
+    args: ['-c', 'cat /workspace/newworkspace/stuff'] # tests that new targetpath and previous task output is dumped
 ---
 #The Output of the first Task (git resource) create-file is given as an `Input`
 # to the next `Task` check-stuff-file-exists using`from` clause.
+
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
@@ -49,9 +52,9 @@ spec:
   - name: source-repo
     type: git
   tasks:
-  - name: get-toolchain-json          # 1. create file
+  - name: first-create-file          # 1. create file
     taskRef:
-      name: get-json
+      name: create-file
     resources:
       inputs:
       - name: workspace
@@ -59,6 +62,14 @@ spec:
       outputs:
       - name: workspace
         resource: source-repo
+  - name: then-check                 # 2.  check file exists
+    taskRef:
+      name: check-stuff-file-exists
+    resources:
+      inputs:
+      - name: workspace
+        resource: source-repo
+        from: [first-create-file]
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -120,6 +131,17 @@ spec:
       value: $(event.repository.url)
 ---
 apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: manual-pipeline-binding
+spec:
+  params:
+    - name: gitrevision
+      value: v0.32.0
+    - name: gitrepositoryurl
+      value: https://github.com/GoogleContainerTools/skaffold
+---
+apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: listener
@@ -132,3 +154,17 @@ spec:
       params:
         - name: message
           value: Hello from the Git Triggers EventListener!
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: manual-listener
+spec:
+  triggers:
+    - binding:
+        name: manual-pipeline-binding
+      template:
+        name: pipeline-template
+      params:
+        - name: message
+          value: Hello from the Manual Triggers EventListener!
