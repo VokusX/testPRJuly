@@ -16,14 +16,14 @@ spec:
   - name: login-and-get
     image: ubuntu
     env:
-        - name: IBMCLOUD_API_KEY
-          value: $(inputs.params.apikey)
-        - name: API
-          value: $(inputs.params.api)
-        - name: REGION
-          value: $(inputs.params.registryRegion)
-        - name: TOOLCHAIN_ID
-          value: $(inputs.params.toolchainID)
+      - name: IBMCLOUD_API_KEY
+        value: $(inputs.params.apikey)
+      - name: API
+        value: $(inputs.params.api)
+      - name: REGION
+        value: $(inputs.params.registryRegion)
+      - name: TOOLCHAIN_ID
+        value: $(inputs.params.toolchainID)
     command: ["/bin/bash"]
     args:
       - ibmcloud login --apikey $IBMCLOUD_API_KEY;
