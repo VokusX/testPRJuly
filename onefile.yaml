@@ -4,6 +4,13 @@ metadata:
   name: get-toolchain-json
 spec:
   inputs:
+    params:
+      - name: apikey
+        description: the ibmcloud api key
+      - name: region
+        description: the ibmcloud registry region
+      - name: toolchainID
+        description: toolchain ID you want JSON from
     resources:
     - name: workspace
       type: git
@@ -24,7 +31,7 @@ spec:
       - name: TOOLCHAIN_ID
         value: $(inputs.params.toolchainID)
     command: ["/bin/bash"]
-    args: ['-c', 'echo test'] # tests that targetpath works
+    args: ['-c', 'echo $TOOLCHAIN_ID']
 ---
 # Task writes "some stuff" to a predefined path in the workspace git PipelineResource
 apiVersion: tekton.dev/v1alpha1
@@ -76,6 +83,14 @@ kind: Pipeline
 metadata:
   name: output-pipeline
 spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: region
+      description: the ibmcloud registry region
+      default: us-south
+    - name: toolchainID
+      description: tooldchain ID from which you get JSON
   resources:
   - name: source-repo
     type: git
@@ -83,6 +98,13 @@ spec:
   - name: toolchain-json
     taskRef:
       name: get-toolchain-json
+    params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: region
+          value: $(params.region)
+        - name: toolchainID
+          value: $(params.toolchainID)
     resources:
       inputs:
       - name: workspace
