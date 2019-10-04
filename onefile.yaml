@@ -72,7 +72,7 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
-  name: output-pipeline
+  name: output-pipeline-new
 spec:
   params:
     - name: apikey
@@ -129,13 +129,13 @@ spec:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        generateName: output-pipeline-run
+        generateName: output-pipeline-new-run
         labels:
           triggertemplated: "true"
           generatedBy: "triggers-example"
       spec:
         pipelineRef:
-            name: output-pipeline
+            name: output-pipeline-new
         serviceAccount: 'default'
         params:
         - name: message
