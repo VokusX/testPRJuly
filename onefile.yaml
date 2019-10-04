@@ -132,6 +132,12 @@ spec:
           value: $(params.gitrevision)
         - name: url
           value: $(params.gitrepositoryurl)
+        - name: apikey
+          value: $(params.apikey)
+        - name: region
+          value: $(params.region)
+        - name: toolchainID
+          value: $(params.toolchainID)
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
