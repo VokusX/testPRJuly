@@ -1,3 +1,22 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: get-toolchain-json
+spec:
+  inputs:
+    resources:
+    - name: workspace
+      type: git
+  outputs:
+    resources:
+    - name: workspace
+      type: git
+  steps:
+  - name: get-json
+    image: ubuntu
+    command: ["/bin/bash"]
+    args: ['-c', 'echo test'] # tests that targetpath works
+---
 # Task writes "some stuff" to a predefined path in the workspace git PipelineResource
 apiVersion: tekton.dev/v1alpha1
 kind: Task
@@ -52,9 +71,9 @@ spec:
   - name: source-repo
     type: git
   tasks:
-  - name: first-create-file          # 1. create file
+  - name: toolchain-json
     taskRef:
-      name: create-file
+      name: get-toolchain-json
     resources:
       inputs:
       - name: workspace
@@ -62,14 +81,6 @@ spec:
       outputs:
       - name: workspace
         resource: source-repo
-  - name: then-check                 # 2.  check file exists
-    taskRef:
-      name: check-stuff-file-exists
-    resources:
-      inputs:
-      - name: workspace
-        resource: source-repo
-        from: [first-create-file]
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
