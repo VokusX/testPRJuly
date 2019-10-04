@@ -14,6 +14,15 @@ spec:
   steps:
   - name: get-json
     image: ubuntu
+    env:
+      - name: IBMCLOUD_API_KEY
+        value: $(inputs.params.apikey)
+      - name: API
+        value: $(inputs.params.api)
+      - name: REGION
+        value: $(inputs.params.region)
+      - name: TOOLCHAIN_ID
+        value: $(inputs.params.toolchainID)
     command: ["/bin/bash"]
     args: ['-c', 'echo test'] # tests that targetpath works
 ---
