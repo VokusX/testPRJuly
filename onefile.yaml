@@ -17,8 +17,6 @@ spec:
     env:
       - name: IBMCLOUD_API_KEY
         value: $(inputs.params.apikey)
-      - name: API
-        value: $(inputs.params.api)
       - name: REGION
         value: $(inputs.params.region)
       - name: TOOLCHAIN_ID
