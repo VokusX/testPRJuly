@@ -5,6 +5,16 @@ metadata:
   name: get-json
 spec:
   inputs:
+    params:
+      - name: apikey
+        description: the ibmcloud api key
+      - name: api
+        description: the ibmcloud api endpoint
+        default: "https://cloud.ibm.com"
+      - name: region
+        description: the ibmcloud registry region
+      - name: toolchainID
+        description: the toolchain id
     resources:
     - name: workspace
       type: git
@@ -21,7 +31,7 @@ spec:
       - name: API
         value: $(inputs.params.api)
       - name: REGION
-        value: $(inputs.params.registryRegion)
+        value: $(inputs.params.region)
       - name: TOOLCHAIN_ID
         value: $(inputs.params.toolchainID)
     command: ["/bin/bash"]
@@ -30,7 +40,6 @@ spec:
 ---
 #The Output of the first Task (git resource) create-file is given as an `Input`
 # to the next `Task` check-stuff-file-exists using`from` clause.
-
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
@@ -111,17 +120,6 @@ spec:
       value: $(event.repository.url)
 ---
 apiVersion: tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: manual-pipeline-binding
-spec:
-  params:
-    - name: gitrevision
-      value: v0.32.0
-    - name: gitrepositoryurl
-      value: https://github.com/GoogleContainerTools/skaffold
----
-apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: listener
@@ -134,17 +132,3 @@ spec:
       params:
         - name: message
           value: Hello from the Git Triggers EventListener!
----
-apiVersion: tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: manual-listener
-spec:
-  triggers:
-    - binding:
-        name: manual-pipeline-binding
-      template:
-        name: pipeline-template
-      params:
-        - name: message
-          value: Hello from the Manual Triggers EventListener!
