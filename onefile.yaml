@@ -26,10 +26,7 @@ spec:
       args:
         - ibmcloud login --apikey $API_KEY;
           TOKEN=$(ibmcloud iam oauth-tokens | cut -c 11-);
-          curl -X GET \
-            "${API}/devops/toolchains/${TOOLCHAIN_ID}"\
-            -H "Accept: application/json" \
-            -H "Authorization: ${TOKEN}"
+          curl -X GET "${API}/devops/toolchains/${TOOLCHAIN_ID}" -H "Accept: application/json" -H "Authorization: ${TOKEN}"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
