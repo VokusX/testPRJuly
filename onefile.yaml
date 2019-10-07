@@ -14,7 +14,7 @@ spec:
         description: the toolchain id        
   steps:
     - name: get-toolchain-json
-      image: ubuntu
+      image: ibmcom/pipeline-base-image
       env:
         - name: APIKEY
           value: $(inputs.params.apikey)
