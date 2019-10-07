@@ -1,78 +1,58 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: get-toolchain-json
+  name: task
 spec:
   inputs:
     params:
       - name: apikey
         description: the ibmcloud api key
       - name: region
-        description: the ibmcloud registry region
+        description: the ibmcloud region
+        default: us-south
       - name: toolchainID
-        description: toolchain ID you want JSON from
+        description: the toolchain id        
   steps:
-  - name: get-json
-    image: ubuntu
-    env:
-      - name: IBMCLOUD_API_KEY
-        value: $(inputs.params.apikey)
-      - name: REGION
-        value: $(inputs.params.region)
-      - name: TOOLCHAIN_ID
-        value: $(inputs.params.toolchainID)
-    command: ["/bin/bash"]
-    args: ['-c', 'echo $TOOLCHAIN_ID']
+    - name: get-toolchain-json
+      image: ubuntu
+      env:
+        - name: APIKEY
+          value: $(inputs.params.apikey)
+        - name: TOOLCHAIN_ID
+          value: $(inputs.params.toolchainID)
+      command: ["/bin/sh", "-c"]
+      args:
+        - echo "Testing env $TOOLCHAIN_ID";
 ---
-# Task writes "some stuff" to a predefined path in the workspace git PipelineResource
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
-  name: create-file
-spec:
-  inputs:
-    resources:
-    - name: workspace
-      type: git
-      targetPath: damnworkspace
-  outputs:
-    resources:
-    - name: workspace
-      type: git
-  steps:
-  - name: read-docs-old
-    image: ubuntu
-    command: ["/bin/bash"]
-    args: ['-c', 'ls -la /workspace/damnworkspace/docs/README.md'] # tests that targetpath works
-  - name: write-new-stuff
-    image: ubuntu
-    command: ['bash']
-    args: ['-c', 'ln -s /workspace/damnworkspace /workspace/output/workspace && echo some stuff > /workspace/output/workspace/stuff']
----
-# Reads a file from a predefined path in the workspace git PipelineResource
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
-  name: check-stuff-file-exists
-spec:
-  inputs:
-    resources:
-    - name: workspace
-      type: git
-      targetPath: newworkspace
-  steps:
-  - name: read
-    image: ubuntu
-    command: ["/bin/bash"]
-    args: ['-c', 'cat /workspace/newworkspace/stuff'] # tests that new targetpath and previous task output is dumped
----
-#The Output of the first Task (git resource) create-file is given as an `Input`
-# to the next `Task` check-stuff-file-exists using`from` clause.
-
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
-  name: output-pipeline-new
+  name: pipeline
+spec:
+  params:
+    - name: apikey
+      description: the ibmcloud api key
+    - name: region
+      description: the ibmcloud region
+      default: us-south
+    - name: toolchainID
+      description: the toolchain id
+  tasks:
+    - name: pipeline-task
+      taskRef:
+        name: task
+      params:
+        - name: apikey
+          value: $(params.apikey)
+        - name: registryRegion
+          value: $(params.region)
+        - name: toolchainID
+          value: $(params.toolchainID)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: template
 spec:
   params:
     - name: apikey
@@ -81,109 +61,31 @@ spec:
       description: the ibmcloud registry region
       default: us-south
     - name: toolchainID
-      description: tooldchain ID from which you get JSON
-  resources:
-  - name: source-repo
-    type: git
-  tasks:
-  - name: toolchain-json
-    taskRef:
-      name: get-toolchain-json
-    params:
-      - name: apikey
-        value: $(params.apikey)
-      - name: region
-        value: $(params.region)
-      - name: toolchainID
-        value: $(params.toolchainID)
----
-apiVersion: tekton.dev/v1alpha1
-kind: TriggerTemplate
-metadata:
-  name: pipeline-template
-spec:
-  params:
-    - name: gitrevision
-      description: The git revision
-      default: master
-    - name: gitrepositoryurl
-      description: The git repository url
-    - name: message
-      description: The message to print
-      default: This is the default message
-    - name: apikey
-      description: the ibmcloud api key
-    - name: region
-      description: The IBM Cloud Kubernetes region
-    - name: toolchainID
-      description: The toolchain id
+      description: the toolchain ID
   resourcetemplates:
-    - apiVersion: tekton.dev/v1alpha1
-      kind: PipelineResource
-      metadata:
-        name: git-source-$(uid)
-        labels:
-          triggertemplated: "true"
-          generatedBy: "triggers-example"
-      spec:
-        type: git
-        params:
-        - name: revision
-          value: $(params.gitrevision)
-        - name: url
-          value: $(params.gitrepositoryurl)
-        - name: apikey
-          value: $(params.apikey)
-        - name: region
-          value: $(params.region)
-        - name: toolchainID
-          value: $(params.toolchainID)
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        generateName: output-pipeline-new-run
-        labels:
-          triggertemplated: "true"
-          generatedBy: "triggers-example"
+        name: pipelinerun-$(uid)
       spec:
         pipelineRef:
-            name: output-pipeline-new
-        serviceAccount: 'default'
+            name: pipeline
         params:
-        - name: message
-          value: $(params.message)
         - name: apikey
           value: $(params.apikey)
-        - name: region
+        - name: registryRegion
           value: $(params.region)
         - name: toolchainID
           value: $(params.toolchainID)
-        resources:
-        - name: source-repo
-          resourceRef:
-            name: git-source-$(uid)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: pipeline-binding
+  name: binding
 spec:
   params:
-    - name: gitrevision
-      value: $(event.head_commit.id)
-    - name: gitrepositoryurl
-      value: $(event.repository.url)
----
-apiVersion: tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: manual-pipeline-binding
-spec:
-  params:
-    - name: gitrevision
-      value: v0.32.0
-    - name: gitrepositoryurl
-      value: https://github.com/GoogleContainerTools/skaffold
+    - name: message
+      value: binding message
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -192,23 +94,9 @@ metadata:
 spec:
   triggers:
     - binding:
-        name: pipeline-binding
+        name: binding
       template:
-        name: pipeline-template
+        name: template
       params:
-        - name: message
-          value: Hello from the Git Triggers EventListener!
----
-apiVersion: tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: manual-listener
-spec:
-  triggers:
-    - binding:
-        name: manual-pipeline-binding
-      template:
-        name: pipeline-template
-      params:
-        - name: message
+        - name: message-l
           value: Hello from the Manual Triggers EventListener!
