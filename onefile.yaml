@@ -44,7 +44,7 @@ spec:
       params:
         - name: apikey
           value: $(params.apikey)
-        - name: registryRegion
+        - name: region
           value: $(params.region)
         - name: toolchainID
           value: $(params.toolchainID)
