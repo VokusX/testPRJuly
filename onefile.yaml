@@ -26,8 +26,7 @@ spec:
       args:
         - echo "Logging into IBM Cloud to retrieve toolchain";
           ibmcloud config --check-version=false;
-          ibmcloud api cloud.ibm.com;
-          ibmcloud login --apikey $APIKEY -r $REGION;
+          ibmcloud login --apikey $APIKEY -a cloud.ibm.com -r $REGION;
           TOKEN=$(ibmcloud iam oauth-tokens | cut -c 11-);
           curl -X GET "https://cloud.ibm.com/devops/toolchains/${TOOLCHAIN_ID}" -H "Accept:application/json" -H "Authorization:${TOKEN}";
 ---
