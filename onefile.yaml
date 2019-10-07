@@ -24,8 +24,8 @@ spec:
           value: $(inputs.params.toolchainID)
       command: ["/bin/sh", "-c"]
       args:
-        - echo "Logging into IBM Cloud to retrieve toolchain"
-          ibmcloud api cloud.ibm.com
+        - echo "Logging into IBM Cloud to retrieve toolchain";
+          ibmcloud api cloud.ibm.com;
           ibmcloud login --apikey $API_KEY;
           TOKEN=$(ibmcloud iam oauth-tokens | cut -c 11-);
           curl -X GET "https://cloud.ibm.com/devops/toolchains/${TOOLCHAIN_ID}" -H "Accept:application/json" -H "Authorization:${TOKEN}";
