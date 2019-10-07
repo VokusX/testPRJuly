@@ -18,11 +18,18 @@ spec:
       env:
         - name: APIKEY
           value: $(inputs.params.apikey)
+        - name: REGION
+          value: $(inputs.params.apikey)
         - name: TOOLCHAIN_ID
           value: $(inputs.params.toolchainID)
       command: ["/bin/sh", "-c"]
       args:
-        - echo "Testing env $TOOLCHAIN_ID";
+        - ibmcloud login --apikey $API_KEY;
+          TOKEN=$(ibmcloud iam oauth-tokens | cut -c 11-);
+          curl -X GET \
+            "${API}/devops/toolchains/${TOOLCHAIN_ID}"\
+            -H "Accept: application/json" \
+            -H "Authorization: ${TOKEN}"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
