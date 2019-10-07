@@ -19,7 +19,7 @@ spec:
         - name: APIKEY
           value: $(inputs.params.apikey)
         - name: REGION
-          value: $(inputs.params.apikey)
+          value: $(inputs.params.region)
         - name: TOOLCHAIN_ID
           value: $(inputs.params.toolchainID)
       command: ["/bin/sh", "-c"]
