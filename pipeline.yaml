@@ -30,7 +30,7 @@ spec:
           TOKEN=$(ibmcloud iam oauth-tokens | cut -c 11-);
           curl -X GET "https://cloud.ibm.com/devops/toolchains/${TOOLCHAIN_ID}" -H "Accept:application/json" -H "Authorization:${TOKEN}" > toolchain.json;
           echo "Cloning repo for JSON parser";
-          git clone --single-branch --branch toolchainJson https://github.com/VokusX/testPRJuly;
+          git clone --single-branch --branch toolchainJson https://github.com/VokusX/testPRJuly ../;
           ls -a;
 ---
 apiVersion: tekton.dev/v1alpha1
